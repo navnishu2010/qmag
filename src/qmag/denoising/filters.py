@@ -1,7 +1,16 @@
-import math 
+from abc import ABC, abstractmethod
 import numpy as np
 import scipy
 from scipy import signal
+
+# 1. Define the Interface (The Contract)
+class BaseFilter(ABC):
+    """Abstract base class to ensure all filters look the same to the pipeline."""
+    
+    @abstractmethod
+    def filter(self, data: np.ndarray) -> np.ndarray:
+        """Apply the filter to the data."""
+        pass
 
 class NotchFilter(BaseFilter):
     def __init__(self, freq: float, fs: float, q: float = 30.0):
