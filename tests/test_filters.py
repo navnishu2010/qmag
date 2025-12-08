@@ -1,7 +1,6 @@
-# tests/test_filters.py
 import numpy as np
 import pytest
-from qmag.denoising import NotchFilter, ButterworthFilter
+from qmag.denoising import NotchFilter, ButterworthFilter, MovingAverageFilter
 
 def test_notch_filter_runs():
     """Check if NotchFilter runs without crashing."""
