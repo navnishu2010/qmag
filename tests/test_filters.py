@@ -7,11 +7,8 @@ def test_notch_filter_runs():
     fs = 100.0
     data = np.random.random(100)
     
-    # Initialize
     nf = NotchFilter(freq=50, fs=fs)
-    
-    # Apply
-    clean_data = nf.apply(data)
+    clean_data = nf.apply_filter(data)
     
     # Assertions
     assert clean_data.shape == data.shape
@@ -26,7 +23,7 @@ def test_butterworth_energy_reduction():
     
     # Filter at 50 Hz
     bf = ButterworthFilter(cutoff=50, fs=fs, btype='lowpass')
-    filtered = bf.apply(noise)
+    filtered = bf.apply_filter(noise)
     
     # The output energy should be much lower than input
     assert np.std(filtered) < 0.1 * np.std(noise)
@@ -44,9 +41,7 @@ def test_moving_average_smoothing():
     
     # Initialize Moving Average (Window size 5)
     ma = MovingAverageFilter(window_size=5)
-    
-    # Apply
-    smoothed = ma.apply(noisy_signal)
+    smoothed = ma.apply_filter(noisy_signal)
     
     # Assertion 1: Shape must be preserved (mode='nearest' ensures this)
     assert len(smoothed) == len(noisy_signal)
