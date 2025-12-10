@@ -1,6 +1,7 @@
 import numpy as np
 import scipy
 from scipy import signal
+from abc import ABC, abstractmethod
 
 # 1. Define the Interface (The Contract)
 class BaseFilter(ABC):
@@ -33,7 +34,7 @@ class NotchFilter(BaseFilter):
     def apply_filter(self, data: np.ndarray) -> np.ndarray:
         return signal.filtfilt(self.b, self.a, data)
 
-class Butterworth(BaseFilter):
+class ButterworthFilter(BaseFilter):
     """
     A class to create and apply a Butterworth digital filter.
     
@@ -65,7 +66,7 @@ class Butterworth(BaseFilter):
         if not isinstance(data, np.ndarray):
             data = np.array(data)
             
-        return signal.filtfilt(self._sos, data)
+        return signal.sosfiltfilt(self._sos, data)
     
 class MovingAverageFilter(BaseFilter):
     """
@@ -86,7 +87,7 @@ class MovingAverageFilter(BaseFilter):
         self.window_size = int(window_size)
         self.kernel = np.ones(self.window_size) / self.window_size
 
-    def apply(self, data: np.ndarray) -> np.ndarray:
+    def apply_filter(self, data: np.ndarray) -> np.ndarray:
         if not isinstance(data, np.ndarray):
             data = np.array(data)
             
