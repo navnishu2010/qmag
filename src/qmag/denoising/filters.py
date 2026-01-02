@@ -1,4 +1,5 @@
 import numpy as np
+import pywt
 import scipy
 from scipy import signal
 from abc import ABC, abstractmethod
@@ -93,3 +94,60 @@ class MovingAverageFilter(BaseFilter):
             
         # mode='same' returns output of length max(M, N) - boundary effects are centered
         return np.convolve(data, self.kernel, mode='same')
+    
+class WaveletDetrender:
+    def __init__(self, wavelet='db4', level=9):
+        """
+        Removes low-frequency non-linear drift using Wavelet Decomposition.
+        
+        Args:
+            wavelet (str): The wavelet shape (e.g., 'db4', 'sym8', 'haar').
+            level (int): Decomposition level. Higher level = removes slower drifts.
+                         If drift is very slow, use a high level (e.g., 8-10).
+        """
+        self.wavelet = wavelet
+        self.level = level
+        
+    def apply_filter(self, data):
+        # 1. Decompose signal
+        coeffs = pywt.wavedec(data, self.wavelet, level=self.level)
+        
+        # 2. Isolate the Trend (Approximation Coefficients)
+        # We keep coeffs[0] (the trend) and zero out all detail coefficients
+        trend_coeffs = [coeffs[0]] + [np.zeros_like(c) for c in coeffs[1:]]
+        
+        # 3. Reconstruct the Trend
+        trend = pywt.waverec(trend_coeffs, self.wavelet)
+        
+        # 4. Fix length mismatch (Wavelets sometimes add padding bytes)
+        if len(trend) > len(data):
+            trend = trend[:len(data)]
+            
+        # 5. Subtract Trend from Data
+        return data - trend
+    
+class PolynomialDetrender:
+    def __init__(self, order=3):
+        """
+        Removes drift by fitting a polynomial curve.
+        
+        Args:
+            order (int): 1=Linear, 2=Quadratic, 3=Cubic.
+                         Order 3 is usually perfect for temperature drift.
+        """
+        self.order = order
+        self.trend = None
+        
+    def apply_filter(self, data, t=None):
+        n = len(data)
+        if t is None:
+            t = np.arange(n)
+            
+        # 1. Fit the polynomial
+        coeffs = np.polyfit(t, data, self.order)
+        
+        # 2. Calculate the trend line
+        self.trend = np.polyval(coeffs, t)
+        
+        # 3. Subtract trend
+        return data - self.trend
